@@ -67,21 +67,27 @@ const generateId = () => {
 
 app.post('/api/persons', (request, response) => {
     const body = request.body
+    const name = persons.filter(person => person.name === body.name).map(name => name.name).join()
 
-    if (!body.content) {
+    if (!body.name || !body.number) {
         return response.status(400).json({
             error: 'content missing'
         })
     }
 
-    const person = {
-        content: body.content,
-        important: body.important || false,
-        date: new Date(),
-        id: generateId(),
+    if (name === body.name) {
+        return response.status(400).json({
+            error: 'name is busy'
+        })
     }
 
-    notes = notes.concat(person)
+    const person = {
+        id: generateId(),
+        name: body.name,
+        number: body.number,
+    }
+
+    persons = persons.concat(person)
 
     response.json(person)
 })
