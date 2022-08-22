@@ -34,6 +34,17 @@ app.get('/api/persons', (request, response) => {
     response.json(persons)
 })
 
+app.get('/api/info', (request, response) => {
+    const qty = Number(persons.length)
+    process.env.TZ = 'Europe/Amsterdam'
+    const time = new Date().toString()
+
+    response.send(`
+        <p>Phonebook has info for ${qty} people</p>
+        <p>${time}</p>
+    `)
+})
+
 app.get('/api/persons/:id', (request, response) => {
     const id = Number(request.params.id)
     console.log(id)
