@@ -5,6 +5,7 @@ const cors = require('cors')
 
 app.use(cors())
 app.use(express.static('build'))
+console.log(123)
 
 let persons = [
     {
