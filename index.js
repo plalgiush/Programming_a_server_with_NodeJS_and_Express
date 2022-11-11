@@ -5,7 +5,6 @@ const cors = require('cors')
 
 app.use(cors())
 app.use(express.static('build'))
-console.log(123)
 
 let persons = [
     {
@@ -37,7 +36,7 @@ morgan.token('body', (request) => JSON.stringify(request.body))
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms :body'))
 
 app.get('/', (request, response) => {
-    response.send('<h1>Hello World!</h1>')
+    response.send('<h1>Hello World!</h1>')  
 })
 
 app.get('/api/persons', (request, response) => {
@@ -79,7 +78,7 @@ app.post('/api/persons', (request, response) => {
     const body = request.body
     const name = persons.filter(person => person.name === body.name).map(name => name.name).join()
 
-    if (!body.name || !body.number) {
+    if (!body.name || !body.phone) {
         return response.status(400).json({
             error: 'content missing'
         })
@@ -94,7 +93,7 @@ app.post('/api/persons', (request, response) => {
     const person = {
         id: generateId(),
         name: body.name,
-        number: body.number,
+        phone: body.phone,
     }
 
     persons = persons.concat(person)
