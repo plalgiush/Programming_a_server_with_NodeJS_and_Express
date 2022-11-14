@@ -21,8 +21,8 @@ const getPersonsList = () => {
     .connect(url)
     .then(() => {
         Person.find({}).then(result => {
-            result.forEach(person => {
-              console.log(person.name, person.phone)
+            result.forEach(persons => {
+              console.log(persons.name, persons.phone)
             })
             mongoose.connection.close()
         })   
@@ -36,12 +36,12 @@ const setPersonInfo = (name, phone) => {
     .then(() => {
       console.log('connected')
   
-      const person = new Person({
+      const persons = new Person({
         name: name,
         phone: phone,
       })
   
-      return person.save()
+      return persons.save()
     })
     .then(() => {
       console.log(`added ${name} number ${phone} to phonebook`)

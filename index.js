@@ -1,7 +1,36 @@
+require('dotenv').config()
 const express = require('express')
 const morgan = require('morgan')
 const app = express()
 const cors = require('cors')
+const mongoose = require('mongoose')
+const PersonModel = require('./models/person')
+
+if (process.argv.length < 3) {
+  console.log('Please provide the password as an argument: node mongo.js <password>')
+  process.exit(1)
+}
+
+const password = process.argv[2]
+
+const url = `mongodb+srv://plalgiush:${password}@cluster0.a7y5bmc.mongodb.net/?retryWrites=true&w=majority`
+
+mongoose.connect(url)
+
+const personSchema = new mongoose.Schema({
+  name: String,
+  phone: String,
+})
+
+personSchema.set('toJSON', {
+    transform: (document, returnedObject) => {
+      returnedObject.id = returnedObject._id.toString()
+      delete returnedObject._id
+      delete returnedObject.__v
+    }
+})
+
+const Person = mongoose.model('Person', personSchema)
 
 app.use(cors())
 app.use(express.static('build'))
@@ -40,7 +69,9 @@ app.get('/', (request, response) => {
 })
 
 app.get('/api/persons', (request, response) => {
-    response.json(persons)
+    Person.find({}).then(persons => {
+        response.json(persons)
+    })
 })
 
 app.get('/api/info', (request, response) => {
@@ -55,16 +86,21 @@ app.get('/api/info', (request, response) => {
 })
 
 app.get('/api/persons/:id', (request, response) => {
-    const id = Number(request.params.id)
-    console.log(id)
-    const person = persons.find(person => person.id === id)
-    console.log(person)
-    if (person) {
+    // const id = Number(request.params.id)
+    // console.log(id)
+    // const person = persons.find(person => person.id === id)
+
+    PersonModel.findById(request.params.id).then(person => {
         response.json(person)
-    } else {
-        response.statusMessage = "Current person does not match";
-        response.status(404).end();
-    }
+    })
+
+    // console.log(person)
+    // if (person) {
+    //     response.json(person)
+    // } else {
+    //     response.statusMessage = "Current person does not match";
+    //     response.status(404).end();
+    // }
 })
 
 const generateId = () => {
@@ -77,7 +113,7 @@ const generateId = () => {
 app.post('/api/persons', (request, response) => {
     const body = request.body
     const name = persons.filter(person => person.name === body.name).map(name => name.name).join()
-
+    
     if (!body.name || !body.phone) {
         return response.status(400).json({
             error: 'content missing'
@@ -90,15 +126,15 @@ app.post('/api/persons', (request, response) => {
         })
     }
 
-    const person = {
+    const person = new Person ({
         id: generateId(),
         name: body.name,
         phone: body.phone,
-    }
+    })
 
-    persons = persons.concat(person)
-
-    response.json(person)
+    return person.save().then(savedPerson => {
+        response.json(savedPerson)
+    })
 })
 
 app.delete('/api/persons/:id', (request, response) => {
@@ -108,7 +144,7 @@ app.delete('/api/persons/:id', (request, response) => {
     response.status(204).end()
 })
 
-const PORT = process.env.PORT || 3001
+const PORT = process.env.PORT
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)
 })
