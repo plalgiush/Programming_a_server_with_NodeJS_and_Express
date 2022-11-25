@@ -3,34 +3,7 @@ const express = require('express')
 const morgan = require('morgan')
 const app = express()
 const cors = require('cors')
-const mongoose = require('mongoose')
-const PersonModel = require('./models/person')
-
-if (process.argv.length < 3) {
-  console.log('Please provide the password as an argument: node mongo.js <password>')
-  process.exit(1)
-}
-
-const password = process.argv[2]
-
-const url = `mongodb+srv://plalgiush:${password}@cluster0.a7y5bmc.mongodb.net/?retryWrites=true&w=majority`
-
-mongoose.connect(url)
-
-const personSchema = new mongoose.Schema({
-  name: String,
-  phone: String,
-})
-
-personSchema.set('toJSON', {
-    transform: (document, returnedObject) => {
-      returnedObject.id = returnedObject._id.toString()
-      delete returnedObject._id
-      delete returnedObject.__v
-    }
-})
-
-const Person = mongoose.model('Person', personSchema)
+const Person = require('./models/person')
 
 app.use(cors())
 app.use(express.static('build'))
@@ -72,7 +45,7 @@ app.get('/api/persons/:id', (request, response, next) => {
                 response.status(404).end()
             }
         })
-        .catch(error => next(error), console.log(persons))
+        .catch(error => next(error))
 })
 
 app.post('/api/persons', (request, response, next) => {
@@ -96,6 +69,23 @@ app.post('/api/persons', (request, response, next) => {
         .catch(error => next(error))
 })
 
+app.put('/api/persons/:id', (request, response, next) => {
+    const body = request.body
+
+    const person = {
+        name: body.name,
+        phone: body.phone,
+    }
+
+    const validRule = { runValidators: true }
+
+    Person.findByIdAndUpdate(request.params.id, person, validRule)
+        .then(updatePerson => {
+            response.json(updatePerson)
+        })
+        .catch(error => next(error))
+})
+
 app.delete('/api/persons/:id', (request, response, next) => {
     Person.findByIdAndRemove(request.params.id)
         .then(() => {
@@ -108,8 +98,10 @@ const errorHandler = (error, request, response, next) => {
     console.error(error.message)
   
     if (error.name === 'CastError') {
-      return response.status(400).send({ error: 'malformatted id' })
-    } 
+        return response.status(400).send({ error: 'malformatted id' })
+    } else if (error.name === 'ValidationError') {
+        return response.status(400).json({ error: error.message })
+    }
   
     next(error)
 }
