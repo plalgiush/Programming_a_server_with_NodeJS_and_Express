@@ -17,30 +17,30 @@ const personSchema = new mongoose.Schema({
 const Person = mongoose.model('Person', personSchema)
 
 const getPersonsList = () => {
-    mongoose
+  mongoose
     .connect(url)
     .then(() => {
-        Person.find({}).then(result => {
-            result.forEach(persons => {
-              console.log(persons.name, persons.phone)
-            })
-            mongoose.connection.close()
-        })   
+      Person.find({}).then(result => {
+        result.forEach(persons => {
+          console.log(persons.name, persons.phone)
+        })
+        mongoose.connection.close()
+      })
     })
-    .catch((err) => console.log(err))  
+    .catch((err) => console.log(err))
 }
 
 const setPersonInfo = (name, phone) => {
-    mongoose
+  mongoose
     .connect(url)
     .then(() => {
       console.log('connected')
-  
+
       const persons = new Person({
         name: name,
         phone: phone,
       })
-  
+
       return persons.save()
     })
     .then(() => {
@@ -51,7 +51,7 @@ const setPersonInfo = (name, phone) => {
 }
 
 if (process.argv.length === 5) {
-    setPersonInfo(process.argv[3], process.argv[4])
+  setPersonInfo(process.argv[3], process.argv[4])
 } else {
-    getPersonsList()
+  getPersonsList()
 }
